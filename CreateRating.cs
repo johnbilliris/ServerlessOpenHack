@@ -14,6 +14,8 @@ namespace Team1
 {
     public static class CreateRating
     {
+        private static readonly HttpClient client = new HttpClient();
+
         [FunctionName("CreateRating")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
@@ -28,6 +30,7 @@ namespace Team1
                 return new BadRequestResult();
             
             var user = await ValidateUserIdAsync(bodyRating.UserId);
+            var product = await ValidateProductIdAsync(bodyRating.ProductId);
 
             string responseMessage = $"User: {user.FullName}";
             /*string responseMessage = string.IsNullOrEmpty(name)
@@ -40,12 +43,17 @@ namespace Team1
 
         private static async Task<User> ValidateUserIdAsync(string userId)
         {
-            var httpClient = new HttpClient();
-            var stringUser = await httpClient.GetStringAsync($"https://serverlessohuser.trafficmanager.net/api/GetUser?userId={userId}");
+            var stringUser = await client.GetStringAsync($"https://serverlessohuser.trafficmanager.net/api/GetUser?userId={userId}");
 
             var user = JsonConvert.DeserializeObject<User>(stringUser);
             return user;
+        }
 
+        private static async Task<Product> ValidateProductIdAsync(string productId)
+        {
+            var stringProduct = await client.GetStringAsync($"https://serverlessohproduct.trafficmanager.net/api/GetProduct?productId={productId}");
+            var product = JsonConvert.DeserializeObject<Product>(stringProduct);
+            return product;
         }
     }
 }
