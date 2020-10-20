@@ -24,7 +24,7 @@ namespace Team1
             log.LogInformation("C# HTTP trigger function processed a request.");
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            Rating bodyRating = JsonConvert.DeserializeObject<Rating>(requestBody);
+            RatingClass bodyRating = JsonConvert.DeserializeObject<RatingClass>(requestBody);
             
             if(bodyRating is null)
                 return new BadRequestResult();
@@ -47,13 +47,13 @@ namespace Team1
                 return new BadRequestResult();
             }
 
-            string responseMessage = $"completed";
-            /*string responseMessage = string.IsNullOrEmpty(name)
-                ? "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response."
-                : $"Hello, {name}. This HTTP triggered function executed successfully.";
-                */
+            bodyRating.Id = Guid.NewGuid().ToString();
+            bodyRating.TimeStamp = DateTime.UtcNow;
 
-            return new OkObjectResult(responseMessage);
+            if(bodyRating.Rating < 0 || bodyRating.Rating > 5)
+                return new BadRequestResult();
+
+            return new OkObjectResult(bodyRating);
         }
 
         private static async Task<User> ValidateUserIdAsync(string userId)
