@@ -29,10 +29,25 @@ namespace Team1
             if(bodyRating is null)
                 return new BadRequestResult();
             
-            var user = await ValidateUserIdAsync(bodyRating.UserId);
-            var product = await ValidateProductIdAsync(bodyRating.ProductId);
+            try{
+                var user = await ValidateUserIdAsync(bodyRating.UserId);
+                log.LogInformation($"User validated: {user.FullName}");
+            } catch(Exception)
+            {
+                log.LogInformation("Couldn't validate user");
+                return new BadRequestResult();
+            }
 
-            string responseMessage = $"User: {user.FullName}";
+            try{
+                var product = await ValidateProductIdAsync(bodyRating.ProductId);
+                log.LogInformation($"Product validated: {product.ProductName}");
+            } catch(Exception)
+            {
+                log.LogInformation("Couldn't validate product");
+                return new BadRequestResult();
+            }
+
+            string responseMessage = $"completed";
             /*string responseMessage = string.IsNullOrEmpty(name)
                 ? "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response."
                 : $"Hello, {name}. This HTTP triggered function executed successfully.";
