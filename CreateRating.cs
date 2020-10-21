@@ -18,10 +18,10 @@ namespace Team1
 
         [FunctionName("CreateRating")]
         public static IActionResult Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
             [CosmosDB(
                 databaseName: "ratingsdata",
-                collectionName: "ratingsV2",
+                collectionName: "ratings",
                 ConnectionStringSetting = "CosmosDBConnection")] out dynamic cosmosDoc,
             ILogger log)
         {
