@@ -17,21 +17,27 @@ namespace Team1
         private static readonly HttpClient client = new HttpClient();
 
         [FunctionName("CreateRating")]
-        public static async Task<IActionResult> Run(
+        public static IActionResult Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
+            [CosmosDB(
+                databaseName: "ratingsdata",
+                collectionName: "ratingsV2",
+                ConnectionStringSetting = "CosmosDBConnection")] out dynamic cosmosDoc,
             ILogger log)
         {
             log.LogInformation("C# HTTP trigger function processed a request.");
 
-            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            string requestBody = new StreamReader(req.Body).ReadToEnd();
             RatingClass bodyRating = JsonConvert.DeserializeObject<RatingClass>(requestBody);
             
+            cosmosDoc = null;
+
             if(bodyRating is null)
                 return new BadRequestResult();
             
             try{
-                var user = await ValidateUserIdAsync(bodyRating.UserId);
-                log.LogInformation($"User validated: {user.FullName}");
+                Task.Run(() => ValidateUserIdAsync(bodyRating.userId));
+                log.LogInformation($"User validated");
             } catch(Exception)
             {
                 log.LogInformation("Couldn't validate user");
@@ -39,19 +45,22 @@ namespace Team1
             }
 
             try{
-                var product = await ValidateProductIdAsync(bodyRating.ProductId);
-                log.LogInformation($"Product validated: {product.ProductName}");
+                Task.Run(() => ValidateProductIdAsync(bodyRating.productId));
+                log.LogInformation($"Product validated");
             } catch(Exception)
             {
                 log.LogInformation("Couldn't validate product");
                 return new BadRequestResult();
             }
 
-            bodyRating.Id = Guid.NewGuid().ToString();
-            bodyRating.TimeStamp = DateTime.UtcNow;
+            bodyRating.id = Guid.NewGuid().ToString();
+            bodyRating.timeStamp = DateTime.UtcNow;
 
-            if(bodyRating.Rating < 0 || bodyRating.Rating > 5)
+            if(bodyRating.rating < 0 || bodyRating.rating > 5)
                 return new BadRequestResult();
+            
+            cosmosDoc = bodyRating;
+            log.LogInformation($"Saving rating to CosmosDB: {cosmosDoc}");
 
             return new OkObjectResult(bodyRating);
         }
