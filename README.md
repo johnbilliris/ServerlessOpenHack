@@ -1,1 +1,2 @@
 # ServerlessOpenHack
+Code produced while participating in Microsoft's Serverless OpenHack during October 20th to 22nd, 2020 with Wely Lau, Dean Corcoran, Fai Lai, Danny Lo, Fabiana Santana and John Billiris.
