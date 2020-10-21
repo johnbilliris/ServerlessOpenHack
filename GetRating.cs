@@ -17,7 +17,7 @@ namespace Team1
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest req,
             [CosmosDB(
                 databaseName: "ratingsdata",
-                collectionName: "ratingsV2",
+                collectionName: "ratings",
                 ConnectionStringSetting = "CosmosDBConnection",
                 Id = "{Query.id}",
                 PartitionKey = "{Query.userId}")] RatingClass rating,
