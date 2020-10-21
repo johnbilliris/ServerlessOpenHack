@@ -10,6 +10,7 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Azure.Documents.Linq;
 
@@ -19,49 +20,23 @@ namespace Team1
     {
         [FunctionName("GetRatings")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "GetRatings/{userId}")] HttpRequest req,
             [CosmosDB(
                 databaseName: "ratingsdata",
                 collectionName: "ratings",
-                ConnectionStringSetting = "CosmosDBConnection")] DocumentClient client,
-            ILogger log)
+                ConnectionStringSetting = "CosmosDBConnection",
+                SqlQuery ="SELECT * FROM c WHERE c.userId={userId} ORDER BY c._ts DESC")] IEnumerable<RatingClass> ratings,
+            ILogger log,
+            string userId)
         {
-            log.LogInformation("C# HTTP trigger GetRatings function processed a request.");
- 
-            string searchTerm = req.Query["userId"];
-            if (string.IsNullOrWhiteSpace(searchTerm))
+            log.LogInformation("GetRating HTTP trigger function processed a request");
+
+            if (ratings == null)
             {
-                return (ActionResult)new NotFoundResult();
+                return new NotFoundResult();
             }
 
-
-            Uri collectionUri = UriFactory.CreateDocumentCollectionUri("ratingsdata", "ratings");
-
-            log.LogInformation($"Searching for: {searchTerm}");
-
-            IDocumentQuery<RatingClass> query = client.CreateDocumentQuery<RatingClass>(collectionUri)
-                .Where(p => p.userId.Equals(searchTerm))
-                .AsDocumentQuery();
-
-            if (query == null)
-            {
-                log.LogInformation($"Rating items not found");
-                return new BadRequestResult();
-            }
-            else
-            {
-                log.LogInformation($"Found Ratings item");
-                List<RatingClass> results = new List<RatingClass>();
-                while (query.HasMoreResults)
-                {
-                    foreach (RatingClass result in await query.ExecuteNextAsync())
-                    {
-                        results.Add(result);
-                    }
-                }
-
-                return new OkObjectResult(results);
-            }
+            return new OkObjectResult(ratings);
         }
     }
 }
