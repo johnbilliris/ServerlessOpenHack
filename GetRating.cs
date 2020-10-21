@@ -17,9 +17,9 @@ namespace Team1
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest req,
             [CosmosDB(
                 databaseName: "ratingsdata",
-                collectionName: "ratings",
+                collectionName: "ratingsV2",
                 ConnectionStringSetting = "CosmosDBConnection",
-                Id = "{Query.ratingId}",
+                Id = "{Query.id}",
                 PartitionKey = "{Query.userId}")] RatingClass rating,
             ILogger log)
         {
@@ -32,7 +32,7 @@ namespace Team1
             }
             else
             {
-                log.LogInformation($"Found Rating item, Description={rating.Id}");
+                log.LogInformation($"Found Rating item, Description={rating.id}");
                 return new OkObjectResult(rating);
             }
         }
