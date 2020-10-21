@@ -7,6 +7,9 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System.Collections.Generic;
+using Microsoft.Azure.Documents.Client;
+using Microsoft.Azure.Documents.Linq;
 
 namespace Team1
 {
@@ -14,22 +17,23 @@ namespace Team1
     {
         [FunctionName("GetRatings")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
-            ILogger log)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "GetRatings/{userId}")] HttpRequest req,
+            [CosmosDB(
+                databaseName: "ratingsdata",
+                collectionName: "ratings",
+                ConnectionStringSetting = "CosmosDBConnection",
+                SqlQuery ="SELECT * FROM c WHERE c.userId={userId} ORDER BY c._ts DESC")] IEnumerable<RatingClass> ratings,
+            ILogger log,
+            string userId)
         {
-            log.LogInformation("C# HTTP trigger function processed a request.");
+            log.LogInformation("GetRating HTTP trigger function processed a request");
 
-            string name = req.Query["name"];
+            if (ratings == null)
+            {
+                return new NotFoundResult();
+            }
 
-            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            dynamic data = JsonConvert.DeserializeObject(requestBody);
-            name = name ?? data?.name;
-
-            string responseMessage = string.IsNullOrEmpty(name)
-                ? "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response."
-                : $"Hello, {name}. This HTTP triggered function executed successfully.";
-
-            return new OkObjectResult(responseMessage);
+            return new OkObjectResult(ratings);
         }
     }
 }
