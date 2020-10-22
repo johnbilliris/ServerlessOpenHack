@@ -1,0 +1,95 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "For_each": {
+                "actions": {
+                    "Create_or_update_document": {
+                        "inputs": {
+                            "body": "@concat('{\"id\":\"', string(item().headers.salesNumber), '\",\"details\":', string(item().details), ',\"headers\":', string(item().headers), '}')",
+                            "headers": {
+                                "x-ms-documentdb-raw-partitionkey": "\"@{items('For_each')['headers']['salesNumber']}\""
+                            },
+                            "host": {
+                                "connection": {
+                                    "name": "@parameters('$connections')['documentdb']['connectionId']"
+                                }
+                            },
+                            "method": "post",
+                            "path": "/dbs/@{encodeURIComponent('ratingsdata')}/colls/@{encodeURIComponent('orders4')}/docs"
+                        },
+                        "runAfter": {},
+                        "type": "ApiConnection"
+                    }
+                },
+                "foreach": "@json(body('HTTP'))",
+                "runAfter": {
+                    "HTTP": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Foreach"
+            },
+            "HTTP": {
+                "inputs": {
+                    "body": "@{replace(variables('initialJsonContent'), 'XXXXXXXXXXXXXX', triggerBody()?['partitionName'])}",
+                    "method": "POST",
+                    "uri": "https://serverlessohmanagementapi.trafficmanager.net/api/order/combineOrderContent"
+                },
+                "runAfter": {
+                    "Initialize_variable": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Http"
+            },
+            "Initialize_variable": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "initialJsonContent",
+                            "type": "string",
+                            "value": "{\n  \"orderHeaderDetailsCSVUrl\": \"https://saicrapiv2.blob.core.windows.net/icrapcontainer/XXXXXXXXXXXXXX-OrderHeaderDetails.csv\",\n  \"orderLineItemsCSVUrl\": \"https://saicrapiv2.blob.core.windows.net/icrapcontainer/XXXXXXXXXXXXXX-OrderLineItems.csv\",\n  \"productInformationCSVUrl\": \"https://saicrapiv2.blob.core.windows.net/icrapcontainer/XXXXXXXXXXXXXX-ProductInformation.csv\"\n}"
+                        }
+                    ]
+                },
+                "runAfter": {},
+                "type": "InitializeVariable"
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "defaultValue": {},
+                "type": "Object"
+            }
+        },
+        "triggers": {
+            "Batch_messages": {
+                "inputs": {
+                    "configurations": {
+                        "icrapibatch": {
+                            "releaseCriteria": {
+                                "messageCount": 3
+                            }
+                        }
+                    },
+                    "mode": "Inline"
+                },
+                "type": "Batch"
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "value": {
+                "documentdb": {
+                    "connectionId": "/subscriptions/94497690-ead9-4a19-8fa2-8f74664f144b/resourceGroups/la-icrapi/providers/Microsoft.Web/connections/documentdb",
+                    "connectionName": "documentdb",
+                    "id": "/subscriptions/94497690-ead9-4a19-8fa2-8f74664f144b/providers/Microsoft.Web/locations/australiaeast/managedApis/documentdb"
+                }
+            }
+        }
+    }
+}

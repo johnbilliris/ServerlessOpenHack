@@ -10,13 +10,14 @@ using Newtonsoft.Json;
 using System.Collections.Generic;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Azure.Documents.Linq;
+using Team1.Models;
 
 namespace Team1
 {
     public static class GetRatings
     {
         [FunctionName("GetRatings")]
-        public static async Task<IActionResult> Run(
+        public static IActionResult Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "GetRatings/{userId}")] HttpRequest req,
             [CosmosDB(
                 databaseName: "ratingsdata",

@@ -1,6 +1,6 @@
 using System;
 
-namespace Team1
+namespace Team1.Models
 {
     public class Product
     {
