@@ -1,0 +1,105 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "BatchReceiver": {
+                "inputs": {
+                    "batchName": "icrapibatch",
+                    "content": "@{concat(variables('uriPrefix'),triggerBody()?['Path'])}",
+                    "host": {
+                        "triggerName": "Batch_messages",
+                        "workflow": {
+                            "id": "/subscriptions/94497690-ead9-4a19-8fa2-8f74664f144b/resourceGroups/la-icrapi/providers/Microsoft.Logic/workflows/BatchReceiver"
+                        }
+                    },
+                    "messageId": "@{replace(replace(triggerBody()?['Name'], substring(triggerBody()?['Name'], 0, 15), ''), '.csv', '')}",
+                    "partitionName": "@{substring(triggerBody()?['Name'], 0, 14)}"
+                },
+                "runAfter": {
+                    "Get_blob_content": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "SendToBatch"
+            },
+            "Get_blob_content": {
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['azureblob']['connectionId']"
+                        }
+                    },
+                    "method": "get",
+                    "path": "/datasets/default/files/@{encodeURIComponent(encodeURIComponent(triggerBody()?['Path']))}/content",
+                    "queries": {
+                        "inferContentType": true
+                    }
+                },
+                "runAfter": {
+                    "Initialize_variable": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ApiConnection"
+            },
+            "Initialize_variable": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "uriPrefix",
+                            "type": "string",
+                            "value": "https://saicrapiv2.blob.core.windows.net"
+                        }
+                    ]
+                },
+                "runAfter": {},
+                "type": "InitializeVariable"
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "defaultValue": {},
+                "type": "Object"
+            }
+        },
+        "triggers": {
+            "When_a_blob_is_added_or_modified_(properties_only)": {
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['azureblob']['connectionId']"
+                        }
+                    },
+                    "method": "get",
+                    "path": "/datasets/default/triggers/batch/onupdatedfile",
+                    "queries": {
+                        "folderId": "JTJmaWNyYXBjb250YWluZXI=",
+                        "maxFileCount": 1
+                    }
+                },
+                "metadata": {
+                    "JTJmaWNyYXBjb250YWluZXI=": "/icrapcontainer"
+                },
+                "recurrence": {
+                    "frequency": "Second",
+                    "interval": 3
+                },
+                "splitOn": "@triggerBody()",
+                "type": "ApiConnection"
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "value": {
+                "azureblob": {
+                    "connectionId": "/subscriptions/94497690-ead9-4a19-8fa2-8f74664f144b/resourceGroups/la-icrapi/providers/Microsoft.Web/connections/azureblob",
+                    "connectionName": "azureblob",
+                    "id": "/subscriptions/94497690-ead9-4a19-8fa2-8f74664f144b/providers/Microsoft.Web/locations/australiaeast/managedApis/azureblob"
+                }
+            }
+        }
+    }
+}

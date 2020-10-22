@@ -2,7 +2,6 @@
     "version": "2.0",
     "logging": {
         "applicationInsights": {
-            "samplingExcludedTypes": "Request",
             "samplingSettings": {
                 "isEnabled": true
             }
@@ -11,9 +10,13 @@
     "extensions": {
         "cosmosDB": {
             "connectionMode": "Gateway",
-            "protocol": "Https",
-            "leaseOptions": {
-                "leasePrefix": "prefix1"
+            "protocol": "Https"
+        },
+        "eventHubs": {
+            "batchCheckpointFrequency": 5,
+            "eventProcessorOptions": {
+                "maxBatchSize": 64,
+                "prefetchCount": 256
             }
         }
     }    
