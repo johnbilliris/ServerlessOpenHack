@@ -1,7 +1,7 @@
 using System;
 using System.Text.Json.Serialization;
 
-namespace Team1
+namespace Team1.Models
 {
     public class RatingClass
     {
